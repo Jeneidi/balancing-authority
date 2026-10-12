@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" data-palette="lime">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beat the Balancing Authority | Day-ahead load forecast benchmark</title>
+  <meta name="description" content="A leakage-safe LightGBM forecaster scored against the grid operator's own EIA-930 day-ahead forecast.">
+  <meta name="theme-color" content="#b5d96a">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230f1f17'/%3E%3Cg fill='%23b5d96a'%3E%3Crect x='4' y='9' width='2.4' height='6' rx='1.2'/%3E%3Crect x='8.2' y='6' width='2.4' height='12' rx='1.2'/%3E%3Crect x='12.4' y='4' width='2.4' height='16' rx='1.2'/%3E%3Crect x='16.6' y='7' width='2.4' height='10' rx='1.2'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="kit.css">
+  <style>
+    .chart-wrap { padding: 1rem; }
+    .chart-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin-bottom: 1rem; }
+    .chart-toolbar label { display: grid; gap: .35rem; color: var(--soft); font-size: .9rem; }
+    .chart-toolbar select { min-width: 14rem; }
+    .chart { width: 100%; height: auto; aspect-ratio: 16 / 8; background: var(--panel); border-radius: var(--r); border: 1px solid var(--color-rule); }
+    .chart text { fill: var(--color-haze); font: 12px var(--font-mono); }
+    .chart .grid { stroke: var(--color-rule); stroke-width: 1; }
+    .chart .actual { stroke: var(--color-ivory); }
+    .chart .operator { stroke: var(--color-tungsten); }
+    .chart .model { stroke: var(--color-tungsten); stroke-width: 2.4; }
+    .chart .band-line { stroke: var(--color-tungsten); stroke-width: 1; stroke-dasharray: 4 4; opacity: .7; }
+    .chart .legend { display: inline-flex; gap: .4rem; align-items: center; margin-right: 1rem; color: var(--soft); font: .8rem var(--font-mono); }
+    .chart .dot { width: .7rem; height: .15rem; display: inline-block; background: currentColor; }
+    .legend-row { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .75rem; }
+    .metric-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; text-align: left; }
+    .metric-table th, .metric-table td { padding: .75rem .5rem; border-bottom: 1px solid var(--color-rule); }
+    .metric-table th { color: var(--color-haze); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+    .metric-table td { font-family: var(--font-mono); font-size: .9rem; }
+    .metric-table td:first-child { font-family: var(--font-sans); color: var(--color-ivory); }
+    .results-note { margin-top: 1rem; color: var(--color-haze); font-size: .9rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
+    .tag { display: inline-flex; padding: .35rem .6rem; border: 1px solid var(--color-rule); border-radius: 999px; color: var(--soft); font: .78rem var(--font-mono); }
+    .status { min-height: 1.4rem; margin-top: .75rem; color: var(--color-tungsten); }
+    @media (min-width: 768px) { .split { grid-template-columns: repeat(12, minmax(0, 1fr)); } .split > *:first-child { grid-column: span 6; } .split > *:last-child { grid-column: 8 / -1; } .split.flip > *:first-child { grid-column: 1 / 6; } .split.flip > *:last-child { grid-column: 7 / -1; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="#top"><svg class="glyph" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1.7" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/><rect x="6.2" y="5" width="2.6" height="14" rx="1.3" fill="currentColor"/><rect x="10.7" y="2" width="2.6" height="20" rx="1.3" fill="currentColor"/><rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/><rect x="19.7" y="10" width="2.6" height="4" rx="1.3" fill="currentColor"/></svg><span>Beat the Authority</span></a>
+      <nav class="desk-nav" aria-label="Sections"><ul class="nav-links"><li><a href="#overview">Overview</a></li><li><a href="#results">Results</a></li><li><a href="#how">How it works</a></li><li><a href="#try">Try it</a></li></ul></nav>
+      <div class="header-actions"><a class="text-link" href="https://github.com/Jeneidi/balancing-authority" target="_blank" rel="noopener"><span>GitHub</span></a><a class="btn btn-primary header-cta" href="#try">Try the demo</a><button type="button" class="menu-btn" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><span></span><span></span><span></span></button></div>
+    </div>
+    <div class="mobile-nav" id="mobile-menu"><div class="mobile-nav-inner"><ul class="mobile-nav-links"><li><a href="#overview">Overview</a></li><li><a href="#results">Results</a></li><li><a href="#how">How it works</a></li><li><a href="#try">Try it</a></li><li><a href="https://github.com/Jeneidi/balancing-authority" target="_blank" rel="noopener">GitHub</a></li></ul><a class="btn btn-primary mobile-nav-cta" href="#try">Try the demo</a></div></div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="hero wrap" id="top" aria-labelledby="title">
+      <h1 id="title" class="display"><span class="line"><span>Can a student model</span></span><span class="line"><span>beat the grid operator?</span></span></h1>
+      <p class="lead hero-sub">A day-ahead electricity demand forecaster scored head-to-head against the operator's own published forecast on public EIA-930 hourly data, with an honest 90% prediction interval.</p>
+      <div class="hero-actions"><a class="btn btn-primary" href="#try">Try the demo</a><a class="btn btn-ghost" href="#how">See how it works</a></div>
+    </section>
+
+    <section class="section wrap" id="overview" aria-labelledby="overview-title">
+      <div class="split">
+        <div><p class="eyebrow">ENERGY AND UTILITIES</p><h2 id="overview-title" class="h2">The baseline is the part that makes the result credible.</h2><p class="prose">Utilities live by day-ahead load forecasts. This project does not compare a model with a strawman. It compares one LightGBM model with the forecast the balancing authority actually published.</p><div class="tag-row"><span class="tag">time-series forecasting</span><span class="tag">EIA-930</span><span class="tag">LightGBM</span><span class="tag">traceability</span></div></div>
+        <div class="media chart-wrap"><p class="mono" style="color:var(--color-haze)">The demo below overlays actual demand, the operator, the model and its 90% band.</p></div>
+      </div>
+      <div class="split flip">
+        <div class="media chart-wrap"><p class="mono" style="color:var(--color-haze)">Three balancing authorities, one held-out test window.</p></div>
+        <div><h3 class="h3">What it proves</h3><p class="prose">Every prediction uses calendar features, demand from at least a day earlier, same-hour-last-week demand, and the temperature forecast issued the day before. The leakage guard is executable, not a promise.</p><p class="prose" style="margin-top:1rem">The same discipline transfers to LLM agents, RAG, evals and MCP tooling: log the source, freeze the evaluation window, and show where the system loses. For grid work, the next questions are anomaly detection, predictive maintenance, smart meters and NRC licensing traceability.</p></div>
+      </div>
+    </section>
+
+    <section class="section band center" id="results" aria-labelledby="results-title"><div class="wrap"><h2 id="results-title" class="h2">Held-out results</h2><p class="lead">Tested on 2026 January through June, never shuffled.</p><div class="stats"><div class="stat"><b id="headline-model">Loading</b><span>Model MAPE</span></div><div class="stat"><b id="headline-operator">Loading</b><span>Operator MAPE</span></div><div class="stat"><b id="headline-win">Loading</b><span>Days model wins</span></div><div class="stat"><b id="headline-coverage">Loading</b><span>90% interval coverage</span></div></div><p class="results-note" id="headline-note">Loading recorded evaluation.</p></div></section>
+
+    <section class="section wrap" id="how" aria-labelledby="how-title"><div class="split"><div><p class="eyebrow">D2 LEAKAGE-SAFE FORECASTING</p><h2 id="how-title" class="h2">How it works</h2><p class="prose">One model, two honest baselines, one walk-forward evaluation.</p></div><ol class="steps"><li><div><b>Get public inputs</b><p>Read EIA-930 demand and operator forecasts for 2024 through 2026 H1. Fetch archived day-ahead temperature from Open-Meteo.</p></div></li><li><div><b>Build the next-day row</b><p>Use calendar features, demand lags and the previous-day weather forecast. No actual weather is allowed into the feature row.</p></div></li><li><div><b>Train without shuffling</b><p>Train on 2024 and 2025 H1, validate on 2025 H2, then score the unseen 2026 H1 test window.</p></div></li><li><div><b>Show the miss</b><p>Report MAPE, bootstrap confidence intervals, win rate, worst days and the share of reality inside the 90% band.</p></div></li></ol></div></section>
+
+    <section class="section wrap" id="try" aria-labelledby="try-title"><div class="split flip"><div class="card chart-wrap"><div class="chart-toolbar"><label for="authority-select">Balancing authority<select id="authority-select" class="control"></select></label><label for="day-select">Test day<select id="day-select" class="control"></select></label></div><svg id="forecast-chart" class="chart" viewBox="0 0 960 480" role="img" aria-label="Actual demand compared with operator and model forecasts"></svg><div class="legend-row"><span class="legend"><i class="dot" style="color:var(--color-ivory)"></i>Actual</span><span class="legend"><i class="dot" style="color:var(--color-tungsten)"></i>Model</span><span class="legend"><i class="dot" style="color:var(--color-haze)"></i>Operator</span><span class="legend"><i class="dot" style="color:var(--color-tungsten);opacity:.7"></i>90% band</span></div><p class="status" id="chart-status" role="status"></p></div><div><h2 id="try-title" class="h2">Try the evidence</h2><p class="prose">Pick a balancing authority and any held-out test day. The chart is driven by the recorded JSON generated by the local run, so the no-key demo is reproducible.</p><table class="metric-table"><thead><tr><th>Metric</th><th id="metric-authority">Selected authority</th></tr></thead><tbody id="metric-body"></tbody></table></div></div></section>
+
+    <section class="section band center" aria-labelledby="cta-title"><div class="wrap"><h2 id="cta-title" class="h2">A credible loss is still a useful result.</h2><p class="prose">The repo includes the raw-data download script, feature tests, leakage guard, metric math and the exact recorded output powering this page.</p><div class="hero-actions"><a class="btn btn-primary" href="https://github.com/Jeneidi/balancing-authority" target="_blank" rel="noopener">View on GitHub</a><a class="btn btn-ghost" href="https://mjeneidi.com" target="_blank" rel="noopener">More projects</a></div></div></section>
+  </main>
+
+  <footer class="wrap site-footer"><p class="footer-brand"><svg class="glyph" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1.7" y="9" width="2.6" height="6" rx="1.3" fill="currentColor"/><rect x="6.2" y="5" width="2.6" height="14" rx="1.3" fill="currentColor"/><rect x="10.7" y="2" width="2.6" height="20" rx="1.3" fill="currentColor"/><rect x="15.2" y="6" width="2.6" height="12" rx="1.3" fill="currentColor"/><rect x="19.7" y="10" width="2.6" height="4" rx="1.3" fill="currentColor"/></svg>Beat the Balancing Authority</p><ul><li><a href="https://github.com/Jeneidi/balancing-authority" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://mjeneidi.com" target="_blank" rel="noopener">mjeneidi.com</a></li></ul><p>© 2026 Mohammad Jeneidi</p></footer>
+  <div class="toast-region" role="status" aria-live="polite"></div>
+  <script src="kit.js"></script><script src="app.js"></script>
+</body>
+</html>

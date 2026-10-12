@@ -1,0 +1,11 @@
+.venv
+data/raw
+data/cache
+__pycache__
+.pytest_cache
+tests
+src
+scripts
+*.py
+requirements.txt
+README.md
