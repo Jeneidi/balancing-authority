@@ -23,6 +23,7 @@ EIA_FIELDS = [
     "UTC Time at End of Hour",
     "Demand Forecast (MW)",
     "Demand (MW)",
+    "Demand (MW) (Adjusted)",
 ]
 FEATURES = [
     "hour",
@@ -61,7 +62,9 @@ def load_eia(raw_dir: Path) -> pd.DataFrame:
         frame = frame[frame["Balancing Authority"].isin(AUTHORITIES)].copy()
         frame["timestamp"] = pd.to_datetime(frame["UTC Time at End of Hour"], utc=True)
         frame["local_timestamp"] = pd.to_datetime(frame["Local Time at End of Hour"], errors="coerce")
-        frame["demand"] = pd.to_numeric(frame["Demand (MW)"], errors="coerce")
+        raw_demand = pd.to_numeric(frame["Demand (MW)"], errors="coerce")
+        adjusted_demand = pd.to_numeric(frame["Demand (MW) (Adjusted)"], errors="coerce")
+        frame["demand"] = adjusted_demand.fillna(raw_demand)
         frame["operator_forecast"] = pd.to_numeric(frame["Demand Forecast (MW)"], errors="coerce")
         frame = frame.dropna(subset=["timestamp", "demand", "operator_forecast"])
         frames.append(frame[["Balancing Authority", "timestamp", "local_timestamp", "demand", "operator_forecast"]])

@@ -49,19 +49,19 @@
 
   <main id="main" tabindex="-1">
     <section class="hero wrap" id="top" aria-labelledby="title">
-      <h1 id="title" class="display"><span class="line"><span>Can a student model</span></span><span class="line"><span>beat the grid operator?</span></span></h1>
+      <h1 id="title" class="display"><span class="line"><span>Can a public-data model</span></span><span class="line"><span>beat the grid operator?</span></span></h1>
       <p class="lead hero-sub">A day-ahead electricity demand forecaster scored head-to-head against the operator's own published forecast on public EIA-930 hourly data, with an honest 90% prediction interval.</p>
       <div class="hero-actions"><a class="btn btn-primary" href="#try">Try the demo</a><a class="btn btn-ghost" href="#how">See how it works</a></div>
     </section>
 
     <section class="section wrap" id="overview" aria-labelledby="overview-title">
       <div class="split">
-        <div><p class="eyebrow">ENERGY AND UTILITIES</p><h2 id="overview-title" class="h2">The baseline is the part that makes the result credible.</h2><p class="prose">Utilities live by day-ahead load forecasts. This project does not compare a model with a strawman. It compares one LightGBM model with the forecast the balancing authority actually published.</p><div class="tag-row"><span class="tag">time-series forecasting</span><span class="tag">EIA-930</span><span class="tag">LightGBM</span><span class="tag">traceability</span></div></div>
+        <div><p class="eyebrow">ENERGY AND UTILITIES</p><h2 id="overview-title" class="h2">The baseline is the part that makes the result credible.</h2><p class="prose">Utilities live by day-ahead load forecasts. This project does not compare a model with a strawman. It compares one LightGBM model with the forecast the balancing authority actually published, using EIA's adjusted demand field when available.</p><div class="tag-row"><span class="tag">time-series forecasting</span><span class="tag">EIA-930</span><span class="tag">LightGBM</span><span class="tag">traceability</span></div></div>
         <div class="media chart-wrap"><p class="mono" style="color:var(--color-haze)">The demo below overlays actual demand, the operator, the model and its 90% band.</p></div>
       </div>
       <div class="split flip">
         <div class="media chart-wrap"><p class="mono" style="color:var(--color-haze)">Three balancing authorities, one held-out test window.</p></div>
-        <div><h3 class="h3">What it proves</h3><p class="prose">Every prediction uses calendar features, demand from at least a day earlier, same-hour-last-week demand, and the temperature forecast issued the day before. The leakage guard is executable, not a promise.</p><p class="prose" style="margin-top:1rem">The same discipline transfers to LLM agents, RAG, evals and MCP tooling: log the source, freeze the evaluation window, and show where the system loses. For grid work, the next questions are anomaly detection, predictive maintenance, smart meters and NRC licensing traceability.</p></div>
+        <div><h3 class="h3">What it proves</h3><p class="prose">Every prediction uses calendar features, adjusted demand from at least a day earlier, same-hour-last-week demand, and the temperature forecast issued the day before. The leakage guard is executable, not a promise.</p><p class="prose" style="margin-top:1rem">The corrected TVA model reaches 3.839868% MAPE versus 13.033403% for the last-week baseline, while the operator remains stronger at 2.394982%. The same discipline transfers to LLM agents, RAG, evals and MCP tooling: log the source, freeze the evaluation window, and show where the system loses.</p></div>
       </div>
     </section>
 
