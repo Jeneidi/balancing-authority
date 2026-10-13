@@ -43,7 +43,7 @@
         const daily = result.daily.find((row) => row.day === day);
         document.querySelector("#chart-status").textContent = `${result.authority} on ${formatDay(day)}: our forecast was off by ${money(daily.model_mape)}, the operator's by ${money(daily.operator_mape)}${daily.event ? ` (${daily.event})` : ""}.`;
         document.querySelector("#metric-authority").textContent = result.authority;
-        const metrics = [["Our average error", money(result.model_mape)], ["Operator's own forecast error", money(result.operator_mape)], ["Simple method error (same hour last week)", money(result.last_week_mape)], ["Likely range of our error (95% confidence)", `${money(result.model_ci_low)} to ${money(result.model_ci_high)}`], ["Days we beat the operator", money(result.win_rate)], ["Hours inside our 90% range", money(result.coverage_90)]];
+        const metrics = [["Our average error", money(result.model_mape)], ["Operator's own forecast error", money(result.operator_mape)], ["Simple method error (same hour last week)", money(result.last_week_mape)], ["Our error, give or take (likely range)", `${money(result.model_ci_low)} to ${money(result.model_ci_high)}`], ["Days we beat the operator", money(result.win_rate)], ["Hours where the real value fell inside our predicted range (goal: 90%)", money(result.coverage_90)]];
         document.querySelector("#metric-body").replaceChildren(...metrics.map(([label, value]) => { const row = document.createElement("tr"); row.innerHTML = `<td>${label}</td><td>${value}</td>`; return row; }));
       };
       authoritySelect.addEventListener("change", setDays); daySelect.addEventListener("change", () => draw(selected(), daySelect.value)); setDays();
