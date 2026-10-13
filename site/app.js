@@ -10,13 +10,13 @@
       const authoritySelect = document.querySelector("#authority-select");
       const daySelect = document.querySelector("#day-select");
       const results = payload.authorities;
-      results.forEach((result) => authoritySelect.add(new Option(`${result.authority} · ${result.display_name}`, result.authority)));
+      results.forEach((result) => authoritySelect.add(new Option(`${result.display_name} (${result.authority})`, result.authority)));
       const average = (key) => results.reduce((sum, result) => sum + result[key], 0) / results.length;
       document.querySelector("#headline-model").textContent = money(average("model_mape"));
       document.querySelector("#headline-operator").textContent = money(average("operator_mape"));
       document.querySelector("#headline-win").textContent = money(average("win_rate"));
       document.querySelector("#headline-coverage").textContent = money(average("coverage_90"));
-      document.querySelector("#headline-note").textContent = `Averages across ${results.length} balancing authorities. Confidence intervals are bootstrap intervals over held-out days.`;
+      document.querySelector("#headline-note").textContent = `Averages across the ${results.length} grid operators. Each forecast also comes with a range that should catch the real value 90% of the time.`;
 
       const selected = () => results.find((result) => result.authority === authoritySelect.value);
       const setDays = () => {
@@ -41,12 +41,12 @@
         drawLine("lower", "band-line"); drawLine("upper", "band-line"); drawLine("operator_forecast", "operator"); drawLine("prediction", "model"); drawLine("demand", "actual");
         [0, 6, 12, 18, 23].forEach((hour) => { const label = svgNode("text", {x: x(hour) - 12, y: 470}); label.textContent = `${String(hour).padStart(2, "0")}:00`; svg.append(label); });
         const daily = result.daily.find((row) => row.day === day);
-        document.querySelector("#chart-status").textContent = `${result.authority} on ${formatDay(day)}: model ${money(daily.model_mape)}, operator ${money(daily.operator_mape)}${daily.event ? `, ${daily.event}` : ""}.`;
+        document.querySelector("#chart-status").textContent = `${result.authority} on ${formatDay(day)}: our forecast was off by ${money(daily.model_mape)}, the operator's by ${money(daily.operator_mape)}${daily.event ? ` (${daily.event})` : ""}.`;
         document.querySelector("#metric-authority").textContent = result.authority;
-        const metrics = [["Model MAPE", money(result.model_mape)], ["Operator MAPE", money(result.operator_mape)], ["Same-hour-last-week MAPE", money(result.last_week_mape)], ["95% CI for model MAPE", `${money(result.model_ci_low)} to ${money(result.model_ci_high)}`], ["Model win rate", money(result.win_rate)], ["90% interval coverage", money(result.coverage_90)]];
+        const metrics = [["Our average error", money(result.model_mape)], ["Operator's own forecast error", money(result.operator_mape)], ["Simple method error (same hour last week)", money(result.last_week_mape)], ["Likely range of our error (95% confidence)", `${money(result.model_ci_low)} to ${money(result.model_ci_high)}`], ["Days we beat the operator", money(result.win_rate)], ["Hours inside our 90% range", money(result.coverage_90)]];
         document.querySelector("#metric-body").replaceChildren(...metrics.map(([label, value]) => { const row = document.createElement("tr"); row.innerHTML = `<td>${label}</td><td>${value}</td>`; return row; }));
       };
       authoritySelect.addEventListener("change", setDays); daySelect.addEventListener("change", () => draw(selected(), daySelect.value)); setDays();
     })
-    .catch((error) => { document.querySelector("#headline-note").textContent = `Recorded results could not load: ${error.message}`; });
+    .catch((error) => { document.querySelector("#headline-note").textContent = `The saved results could not load: ${error.message}`; });
 })();
